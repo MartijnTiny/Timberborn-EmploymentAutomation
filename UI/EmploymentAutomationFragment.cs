@@ -60,17 +60,14 @@ public class EmploymentAutomationFragment(
 
     private void UpdateWorkerLimitSliderRange()
     {
-        if (workplace == null) return;
-
-        // Update the slider's max value to match workplace.MaxWorkers
         var currentValue = workerLimitSlider.value;
+        var maxWorkers = workplace != null ? workplace.MaxWorkers : 1;
         workerLimitSlider.lowLimit = 0;
-        workerLimitSlider.highLimit = workplace.MaxWorkers;
-        
-        // Clamp the current value to the new range
+        workerLimitSlider.highLimit = maxWorkers;
+
         workerLimitSlider.value = new Vector2(
-            Mathf.Clamp(currentValue.x, 0, workplace.MaxWorkers),
-            Mathf.Clamp(currentValue.y, 0, workplace.MaxWorkers));
+            Mathf.Clamp(currentValue.x, 0, maxWorkers),
+            Mathf.Clamp(currentValue.y, 0, maxWorkers));
     }
 
     private void OnWorkerLimitSliderChanged(Vector2Int value)

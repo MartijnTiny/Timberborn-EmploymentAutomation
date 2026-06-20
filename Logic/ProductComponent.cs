@@ -53,11 +53,11 @@ public class ProductComponent : BaseEmploymentComponent
 
     public override void Tick()
     {
-        if (manufactory == null || districtBuilding == null || workplace == null)
+        if (manufactory == null || districtBuilding == null)
         {
             Available = false;
             Fillrate = 1.0f;
-            EmploymentBounds = workplace != null ? new Vector2Int(workplace.MaxWorkers, 0) : Vector2Int.zero;
+            EmploymentBounds = Vector2Int.zero;
             return;
         }
 
@@ -72,10 +72,11 @@ public class ProductComponent : BaseEmploymentComponent
 
     private Vector2Int GetEmploymentBoundsProduct(float fillrate)
     {
-        if (workplace == null || employmentComponent == null)
-        {
+        if (employmentComponent == null)
             return Vector2Int.zero;
-        }
+
+        if (workplace == null)
+            return Vector2Int.zero;
 
         var bounds = new Vector2Int(workplace.MaxWorkers, 0);
         var offset = (High - Low) / (workplace.MaxWorkers * 2 - 1);
