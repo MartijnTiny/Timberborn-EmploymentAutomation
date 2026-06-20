@@ -63,9 +63,9 @@ public class ProductComponent : BaseEmploymentComponent
 
         Available = manufactory.CurrentRecipe?.ProducesProducts ?? false;
         var products = manufactory.CurrentRecipe?.Products ?? [];
-        var primaryProduct = products.FirstOrDefault();
-        Fillrate = primaryProduct.Id != null
-            ? districtResourceCounterService.GetFillRate(districtBuilding.InstantDistrict, primaryProduct.Id)
+        var primaryProduct = products.FirstOrDefault()?.Id;
+        Fillrate = primaryProduct != null
+            ? districtResourceCounterService.GetFillRate(districtBuilding.InstantDistrict, primaryProduct)
             : 1.0f;
         EmploymentBounds = GetEmploymentBoundsProduct(Active ? Fillrate : 1.0f);
     }
