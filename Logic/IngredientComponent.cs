@@ -64,11 +64,10 @@ public class IngredientComponent : BaseEmploymentComponent
 
         Available = manufactory.CurrentRecipe?.ConsumesIngredients ?? false;
         var ingredients = manufactory.CurrentRecipe?.Ingredients ?? [];
-        Fillrate = ingredients.Aggregate(
-            1.0f,
-            (current, ingredient) => Mathf.Min(
-                current,
-                districtResourceCounterService.GetFillRate(districtBuilding.InstantDistrict, ingredient.Id)));
+        var primaryIngredient = ingredients.FirstOrDefault();
+        Fillrate = primaryIngredient.Id != null
+            ? districtResourceCounterService.GetFillRate(districtBuilding.InstantDistrict, primaryIngredient.Id)
+            : 1.0f;
         EmploymentBounds = GetEmploymentBoundsIngredient(Active ? Fillrate : 1.0f);
     }
 
