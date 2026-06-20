@@ -70,6 +70,14 @@ public class ProductComponent : TickableComponent, IPersistentEntity, IEmploymen
 
     public override void Tick()
     {
+        if (manufactory == null || districtBuilding == null || workplace == null)
+        {
+            Available = false;
+            Fillrate = 1.0f;
+            EmploymentBounds = workplace != null ? new Vector2Int(workplace.MaxWorkers, 0) : Vector2Int.zero;
+            return;
+        }
+
         Available = manufactory.CurrentRecipe?.ProducesProducts ?? false;
         var products = manufactory.CurrentRecipe?.Products ?? [];
         Fillrate = products.Aggregate(
@@ -83,6 +91,11 @@ public class ProductComponent : TickableComponent, IPersistentEntity, IEmploymen
 
     private Vector2Int GetEmploymentBoundsProduct(float fillrate)
     {
+        if (workplace == null)
+        {
+            return Vector2Int.zero;
+        }
+
         var bounds = new Vector2Int(workplace.MaxWorkers, 0);
         var offset = (High - Low) / (workplace.MaxWorkers * 2 - 1);
         var low = Low;

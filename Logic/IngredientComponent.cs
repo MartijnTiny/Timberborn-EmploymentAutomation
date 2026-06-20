@@ -71,6 +71,14 @@ public class IngredientComponent : TickableComponent, IPersistentEntity, IEmploy
 
     public override void Tick()
     {
+        if (manufactory == null || districtBuilding == null || workplace == null)
+        {
+            Available = false;
+            Fillrate = 1.0f;
+            EmploymentBounds = workplace != null ? new Vector2Int(workplace.MaxWorkers, 0) : Vector2Int.zero;
+            return;
+        }
+
         Available = manufactory.CurrentRecipe?.ConsumesIngredients ?? false;
         var ingredients = manufactory.CurrentRecipe?.Ingredients ?? [];
         Fillrate = ingredients.Aggregate(
@@ -81,8 +89,13 @@ public class IngredientComponent : TickableComponent, IPersistentEntity, IEmploy
         EmploymentBounds = GetEmploymentBoundsIngredient(Active ? Fillrate : 1.0f);
     }
 
-    private Vector2Int GetEmploymentBoundsIngredient(float fillrate)
+	private Vector2Int GetEmploymentBoundsIngredient(float fillrate)
     {
+        if (workplace == null) 
+        {
+            return Vector2Int.zero;
+        }
+
         var bounds = new Vector2Int(workplace.MaxWorkers, 0);
         var offset = (High - Low) / (workplace.MaxWorkers * 2 - 1);
         var low = Low;

@@ -86,8 +86,15 @@ public class PowerComponent : TickableComponent, IPersistentEntity, IEmploymentB
     public override void Tick()
     {
         Available = (mechanicalNode?.IsConsumer ?? false) && (manufactory?.HasCurrentRecipe ?? false);
-        if(!Available)
+        if (!Available)
+        {
+            if (EmploymentBounds == default)
+            {
+                EmploymentBounds = workplace != null ? new Vector2Int(workplace.MaxWorkers, 0) : Vector2Int.zero;
+            }
             return;
+        }
+
         var batteries = mechanicalNode?.Graph?.Batteries.Where(battery =>
             battery.ActiveAndPowered).ToImmutableArray() ?? [];
         var capacities = batteries.Select(battery =>
@@ -102,6 +109,11 @@ public class PowerComponent : TickableComponent, IPersistentEntity, IEmploymentB
 
     private Vector2Int GetEmploymentBoundsPower(float powerMeter)
     {
+        if (workplace == null)
+        {
+            return Vector2Int.zero;
+        }
+
         return new Vector2Int(
             powerMeter < High ? 0 : workplace.MaxWorkers, // min
             powerMeter < Low ? 0 : workplace.MaxWorkers); // max
