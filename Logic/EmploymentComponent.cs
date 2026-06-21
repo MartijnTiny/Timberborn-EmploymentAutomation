@@ -86,30 +86,19 @@ public class EmploymentComponent : TickableComponent, IPersistentEntity
             DecreaseDesiredWorkers();
     }
 
-    private int GetDesiredWorkers() => pausableBuilding.Paused ? 0 : workplace.DesiredWorkers;
+    private int GetDesiredWorkers() => workplace.DesiredWorkers;
 
 
     private void IncreaseDesiredWorkers()
     {
-        if (pausableBuilding.Paused)
-        {
-            pausableBuilding.Resume();
-        }
-        else
-        {
-            workplace.IncreaseDesiredWorkers();
-        }
+        workplace.IncreaseDesiredWorkers();
     }
 
     private void DecreaseDesiredWorkers()
     {
-        if (workplace.DesiredWorkers > 1)
+        if (workplace.DesiredWorkers > 0)
         {
             workplace.DecreaseDesiredWorkers();
-        }
-        else
-        {
-            pausableBuilding.Pause();
         }
     }
 }

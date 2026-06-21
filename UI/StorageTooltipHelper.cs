@@ -206,7 +206,12 @@ public static class StorageTooltipHelper
                      .Where(kvp => resourceSet.Contains(kvp.Key))
                      .SelectMany(kvp => kvp.Value))
         {
-            var invLabel = inventory.ToString().Split('\n')[0].Trim();
+            if (inventory == null || inventory.Equals(null))
+            {
+                continue;
+            }
+            string invLabel = inventory.GameObject.name;
+            //var invLabel = inventory.ToString().Split('\n')[0].Trim();
             var capacityCache = new List<GoodAmount>();
             inventory.GetCapacity(capacityCache);
             var totalSlots = capacityCache.Select(c => c.GoodId).Distinct().Count();
