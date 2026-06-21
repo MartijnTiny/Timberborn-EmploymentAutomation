@@ -71,6 +71,14 @@ public abstract class BaseEmploymentComponent : TickableComponent, IPersistentEn
         return (effectiveMin, effectiveMax);
     }
 
+    protected void CopySettingsFrom(BaseEmploymentComponent source)
+    {
+        if (source == null) return;
+        Active = source.Active;
+        High = source.High;
+        Low = source.Low;
+    }
+
     /// <summary>
     /// Apply worker limits to employment bounds. This ensures the bounds respect MinWorkerLimit and MaxWorkerLimit.
     /// </summary>

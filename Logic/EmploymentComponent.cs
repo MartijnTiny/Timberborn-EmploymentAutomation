@@ -1,6 +1,7 @@
 ﻿using Bindito.Core;
 using System;
 using Timberborn.Buildings;
+using Timberborn.DuplicationSystem;
 using Timberborn.Persistence;
 using Timberborn.SingletonSystem;
 using Timberborn.TickSystem;
@@ -10,7 +11,7 @@ using UnityEngine;
 
 namespace EmploymentAutomation.Logic;
 
-public class EmploymentComponent : TickableComponent, IPersistentEntity
+public class EmploymentComponent : TickableComponent, IPersistentEntity, IDuplicable<EmploymentComponent>
 {
     private static readonly ComponentKey EmploymentManagerComponentKey = new("EmploymentManager");
     private static readonly PropertyKey<int> MinWorkerLimitKey = new("MinWorkerLimit");
@@ -101,4 +102,12 @@ public class EmploymentComponent : TickableComponent, IPersistentEntity
             workplace.DecreaseDesiredWorkers();
         }
     }
+
+    public void DuplicateFrom(EmploymentComponent source)
+    {
+        if (source == null) return;
+        MinWorkerLimit = source.MinWorkerLimit;
+        MaxWorkerLimit = source.MaxWorkerLimit;
+    }
+
 }

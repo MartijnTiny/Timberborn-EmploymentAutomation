@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using Bindito.Core;
+using Timberborn.DuplicationSystem;
 using Timberborn.GameDistricts;
 using Timberborn.Persistence;
 using Timberborn.SingletonSystem;
@@ -11,7 +12,7 @@ using UnityEngine;
 
 namespace EmploymentAutomation.Logic;
 
-public class ProductComponent : BaseEmploymentComponent
+public class ProductComponent : BaseEmploymentComponent, IDuplicable<ProductComponent>
 {
     private static readonly ComponentKey EmploymentManagerComponentKey = new("EmploymentManagerProductComponent");
     private static readonly PropertyKey<bool> OutStockActiveKey = new("Active");
@@ -92,4 +93,10 @@ public class ProductComponent : BaseEmploymentComponent
 
         return ApplyWorkerLimits(bounds, employmentComponent.MinWorkerLimit, employmentComponent.MaxWorkerLimit);
     }
+
+    public void DuplicateFrom(ProductComponent source)
+    {
+        CopySettingsFrom(source);
+    }
+
 }
