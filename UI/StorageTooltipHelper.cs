@@ -38,6 +38,7 @@ public static class StorageTooltipHelper
             return cached;
 
         _cachedTooltip = null;
+        _cachedTooltipKey = null;
         var snapshot = new DistrictSnapshot();
         var maxRecipeSlots = 0;
         var inventoryRegistry = district.GetComponent<DistrictInventoryRegistry>();
@@ -206,66 +207,74 @@ public static class StorageTooltipHelper
                      .Where(kvp => resourceSet.Contains(kvp.Key))
                      .SelectMany(kvp => kvp.Value))
         {
-            if (inventory == null || inventory.Equals(null))
+            if (inventory == null)
             {
                 continue;
             }
-            string invLabel = inventory.GameObject.name;
-            //var invLabel = inventory.ToString().Split('\n')[0].Trim();
-            var capacityCache = new List<GoodAmount>();
-            inventory.GetCapacity(capacityCache);
-            var totalSlots = capacityCache.Select(c => c.GoodId).Distinct().Count();
 
-            var hasInput = false;
-            foreach (var rid in resourceIds)
-                if (inventory.InputGoods.Contains(rid)) { hasInput = true; break; }
-            if (totalSlots > snapshot.OutputThreshold && !hasInput)
+            try
             {
-                Debug.Log($"[EmploymentAutomation] skipped district: {invLabel} capSlots={totalSlots}");
-                continue;
+                var invLabel = inventory.GameObject.name;
+                var capacityCache = new List<GoodAmount>();
+                inventory.GetCapacity(capacityCache);
+                var totalSlots = capacityCache.Select(c => c.GoodId).Distinct().Count();
+
+                var hasInput = false;
+                foreach (var rid in resourceIds)
+                    if (inventory.InputGoods.Contains(rid)) { hasInput = true; break; }
+
+                if (totalSlots > snapshot.OutputThreshold && !hasInput)
+                {
+                    Debug.Log($"[EmploymentAutomation] skipped district: {invLabel} capSlots={totalSlots}");
+                    continue;
+                }
+
+                var seenGoods = new HashSet<string>();
+                foreach (var good in capacityCache)
+                {
+                    if (!resourceSet.Contains(good.GoodId))
+                        continue;
+                    if (!seenGoods.Add(good.GoodId))
+                        continue;
+
+                    var stock = inventory.Stock.FirstOrDefault(s => s.GoodId == good.GoodId);
+                    var stockAmount = stock.Amount;
+
+                    districtCur[good.GoodId] += stockAmount;
+                    districtMax[good.GoodId] += good.Amount;
+
+                    var isInput = inventory.InputGoods.Contains(good.GoodId);
+                    var isOutput = inventory.OutputGoods.Contains(good.GoodId);
+                    var isStorage = isInput && isOutput;
+
+                    if (isInput)
+                    {
+                        inputCur[good.GoodId] += stockAmount;
+                        inputMax[good.GoodId] += good.Amount;
+                        if (!isStorage)
+                        {
+                            producerInputCur[good.GoodId] += stockAmount;
+                            producerInputMax[good.GoodId] += good.Amount;
+                        }
+                        Debug.Log($"[EmploymentAutomation] input: {invLabel} +{stockAmount}/{good.Amount} {good.GoodId}");
+                    }
+
+                    if (isOutput && !(totalSlots > snapshot.OutputThreshold && !inventory.InputGoods.Contains(good.GoodId)))
+                    {
+                        outputCur[good.GoodId] += stockAmount;
+                        outputMax[good.GoodId] += good.Amount;
+                        if (!isStorage)
+                        {
+                            producerOutputCur[good.GoodId] += stockAmount;
+                            producerOutputMax[good.GoodId] += good.Amount;
+                        }
+                        Debug.Log($"[EmploymentAutomation] output: {invLabel} +{stockAmount}/{good.Amount} {good.GoodId}");
+                    }
+                }
             }
-
-            var seenGoods = new HashSet<string>();
-            foreach (var good in capacityCache)
+            catch
             {
-                if (!resourceSet.Contains(good.GoodId))
-                    continue;
-                if (!seenGoods.Add(good.GoodId))
-                    continue;
-
-                var stock = inventory.Stock.FirstOrDefault(s => s.GoodId == good.GoodId);
-                var stockAmount = stock.GoodId == good.GoodId ? stock.Amount : 0;
-
-                districtCur[good.GoodId] += stockAmount;
-                districtMax[good.GoodId] += good.Amount;
-
-                var isInput = inventory.InputGoods.Contains(good.GoodId);
-                var isOutput = inventory.OutputGoods.Contains(good.GoodId);
-                var isStorage = isInput && isOutput;
-
-                if (isInput)
-                {
-                    inputCur[good.GoodId] += stockAmount;
-                    inputMax[good.GoodId] += good.Amount;
-                    if (!isStorage)
-                    {
-                        producerInputCur[good.GoodId] += stockAmount;
-                        producerInputMax[good.GoodId] += good.Amount;
-                    }
-                    Debug.Log($"[EmploymentAutomation] input: {invLabel} +{stockAmount}/{good.Amount} {good.GoodId}");
-                }
-
-                if (isOutput && !(totalSlots > snapshot.OutputThreshold && !inventory.InputGoods.Contains(good.GoodId)))
-                {
-                    outputCur[good.GoodId] += stockAmount;
-                    outputMax[good.GoodId] += good.Amount;
-                    if (!isStorage)
-                    {
-                        producerOutputCur[good.GoodId] += stockAmount;
-                        producerOutputMax[good.GoodId] += good.Amount;
-                    }
-                    Debug.Log($"[EmploymentAutomation] output: {invLabel} +{stockAmount}/{good.Amount} {good.GoodId}");
-                }
+                // Inventory was destroyed between snapshot build and tooltip display; skip it.
             }
         }
 

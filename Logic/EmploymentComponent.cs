@@ -82,9 +82,24 @@ public class EmploymentComponent : TickableComponent, IPersistentEntity, IDuplic
         // perform employment
         var currentDesiredWorkers = GetDesiredWorkers();
         if (currentDesiredWorkers < bounds.x)
+        {
+            if (pausableBuilding.Paused)
+            {
+                pausableBuilding.Resume();
+            }
             IncreaseDesiredWorkers();
+        }
         else if (currentDesiredWorkers > bounds.y)
-            DecreaseDesiredWorkers();
+        {
+            if (currentDesiredWorkers > 0)
+            {
+                DecreaseDesiredWorkers();
+            }
+            else
+            {
+                pausableBuilding.Pause();
+            }
+        }
     }
 
     private int GetDesiredWorkers() => workplace.DesiredWorkers;
