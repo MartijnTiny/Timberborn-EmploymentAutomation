@@ -1,6 +1,6 @@
 ﻿using Bindito.Core;
 using System;
-using Timberborn.Buildings;
+using System.Reflection;
 using Timberborn.DuplicationSystem;
 using Timberborn.Persistence;
 using Timberborn.SingletonSystem;
@@ -18,10 +18,10 @@ public class EmploymentComponent : TickableComponent, IPersistentEntity, IDuplic
     private static readonly PropertyKey<int> MaxWorkerLimitKey = new("MaxWorkerLimit");
 
     private Workplace workplace;
-    private PowerComponent powerComponent;
-    private ProductComponent productComponent;
-    private IngredientComponent ingredientComponent;
-    private PausableBuilding pausableBuilding;
+
+    static EmploymentComponent()
+    {
+    }
 
     public int MinWorkerLimit { get; set; } = 0;
     public int MaxWorkerLimit { get; set; } = int.MaxValue;
@@ -48,8 +48,7 @@ public class EmploymentComponent : TickableComponent, IPersistentEntity, IDuplic
     }
 
     [Inject]
-    public void InjectDependencies(
-        EventBus eventBus)
+    public void InjectDependencies(EventBus eventBus)
     {
         eventBus.Register(this);
     }
@@ -57,65 +56,33 @@ public class EmploymentComponent : TickableComponent, IPersistentEntity, IDuplic
     private void UpdateComponents()
     {
         workplace = GetComponent<Workplace>();
-        powerComponent = GetComponent<PowerComponent>();
-        productComponent = GetComponent<ProductComponent>();
-        ingredientComponent = GetComponent<IngredientComponent>();
-        pausableBuilding = GetComponent<PausableBuilding>();
     }
 
     public override void StartTickable() => UpdateComponents();
 
     public override void Tick()
     {
+        var powerComponent = GetComponent<PowerComponent>();
+        var productComponent = GetComponent<ProductComponent>();
+        var ingredientComponent = GetComponent<IngredientComponent>();
+
         var ingredientsEnabled = ingredientComponent is { Available: true, Active: true };
         var productEnabled = productComponent is { Available: true, Active: true };
         var powerEnabled = powerComponent is { Available: true, Active: true };
-        var hasToTick = workplace is not null && pausableBuilding is not null &&
-                        (ingredientsEnabled || productEnabled || powerEnabled);
-        if (!hasToTick) return;
-        // employment trigger bounds
+        if (workplace is null || !(ingredientsEnabled || productEnabled || powerEnabled)) return;
+
         var bounds = new Vector2Int(workplace.MaxWorkers, workplace.MaxWorkers);
         if (powerEnabled) bounds = Vector2Int.Min(bounds, powerComponent.EmploymentBounds);
         if (ingredientsEnabled) bounds = Vector2Int.Min(bounds, ingredientComponent.EmploymentBounds);
         if (productEnabled) bounds = Vector2Int.Min(bounds, productComponent.EmploymentBounds);
 
-        // perform employment
-        var currentDesiredWorkers = GetDesiredWorkers();
-        if (currentDesiredWorkers < bounds.x)
-        {
-            if (pausableBuilding.Paused)
-            {
-                pausableBuilding.Resume();
-            }
-            IncreaseDesiredWorkers();
-        }
-        else if (currentDesiredWorkers > bounds.y)
-        {
-            if (currentDesiredWorkers > 0)
-            {
-                DecreaseDesiredWorkers();
-            }
-            else
-            {
-                pausableBuilding.Pause();
-            }
-        }
-    }
+        var target = Mathf.Clamp(bounds.y, 0, workplace.MaxWorkers);
+        if (workplace.DesiredWorkers == target) return;
 
-    private int GetDesiredWorkers() => workplace.DesiredWorkers;
+        Debug.Log($"[EmploymentAutomation] {workplace.GameObject.name} DesiredWorkers {workplace.DesiredWorkers} -> {target}");
 
-
-    private void IncreaseDesiredWorkers()
-    {
-        workplace.IncreaseDesiredWorkers();
-    }
-
-    private void DecreaseDesiredWorkers()
-    {
-        if (workplace.DesiredWorkers > 0)
-        {
-            workplace.DecreaseDesiredWorkers();
-        }
+        workplace.DesiredWorkers = target;
+        workplace.UnassignWorkerIfOverstaffed();
     }
 
     public void DuplicateFrom(EmploymentComponent source)
@@ -124,5 +91,4 @@ public class EmploymentComponent : TickableComponent, IPersistentEntity, IDuplic
         MinWorkerLimit = source.MinWorkerLimit;
         MaxWorkerLimit = source.MaxWorkerLimit;
     }
-
 }

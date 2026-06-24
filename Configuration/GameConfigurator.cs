@@ -18,7 +18,7 @@ public class GameConfigurator : Configurator
         employmentAutomationFragment, ingredientAutomationFragment, productAutomationFragment, powerAutomationFragment
     ]);
 
-    protected override void Configure()
+    public override void Configure()
     {
         Bind<DistrictResourceCounterService>().AsSingleton();
         Bind<EmploymentComponent>().AsTransient();

@@ -27,6 +27,7 @@ public class IngredientComponent : BaseEmploymentComponent, IDuplicable<Ingredie
     public override bool Active { get; set; } = false;
     public override float High { get; set; } = 0.50f;
     public override float Low { get; set; } = 0.10f;
+    protected override bool ShouldPause => (Fillrate < Low);
 
     protected override ComponentKey GetComponentKey() => EmploymentManagerComponentKey;
 
@@ -70,6 +71,7 @@ public class IngredientComponent : BaseEmploymentComponent, IDuplicable<Ingredie
             ? districtResourceCounterService.GetFillRate(districtBuilding.InstantDistrict, primaryIngredient)
             : 1.0f;
         EmploymentBounds = GetEmploymentBoundsIngredient(Active ? Fillrate : 1.0f);
+        ApplyPauseLogic();
     }
 
 	private Vector2Int GetEmploymentBoundsIngredient(float fillrate)

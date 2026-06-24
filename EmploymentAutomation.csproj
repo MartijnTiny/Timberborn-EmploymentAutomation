@@ -4,21 +4,43 @@
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
+	
 	<ItemGroup>
-		<Reference Include="..\..\..\..\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\A*.dll" />
-		<Reference Include="..\..\..\..\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\T*.dll" />
-		<Reference Include="..\..\..\..\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\U*.dll" />
-		<Reference Include="..\..\..\..\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\B*.dll" />
+		<AllTDlls Include="D:\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\T*.dll" />
+		<AllTDlls Remove="D:\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\Timberborn.WorkSystem.dll" />
+		<AllTDlls Include="D:\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\A*.dll" />
+		<AllTDlls Include="D:\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\U*.dll" />
+		<AllTDlls Include="D:\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\B*.dll" />
+		<Reference Include="@(AllTDlls)">
+			<Publicize>true</Publicize>
+			<Private>False</Private>
+		  </Reference>
+			
+			
+		
+  
+  <Reference Include="Timberborn.WorkSystem">
+    <HintPath>D:\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\Timberborn.WorkSystem.dll</HintPath>
+    <Publicize>true</Publicize> <Private>False</Private>
+  </Reference>
+
+  <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3" PrivateAssets="all" />
+</ItemGroup>
+
+	<ItemGroup>
+		<!--<Reference Include="..\..\..\..\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\A*.dll" />-->
+		<!--<Reference Include="..\..\..\..\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\T*.dll" />-->
+		<!--<Reference Include="..\..\..\..\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\U*.dll" />-->
+		<!--<Reference Include="..\..\..\..\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\B*.dll" />-->
 		<Reference Include="..\..\..\..\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed\System.Collections.Immutable.dll" />
 		<Reference Include="TimberUi">
 			<HintPath>D:\Program Files (x86)\Steam\steamapps\workshop\content\1062090\3430626620\version-1.0\TimberUi.dll</HintPath>
 		</Reference>
 	</ItemGroup>
+
 	<PropertyGroup>
 		<!-- Path where the compiled mod DLL should be copied for Timberborn workshop installation -->
 		<TimberbornWorkshopScriptsPath>D:\Program Files (x86)\Steam\steamapps\workshop\content\1062090\3430228682\version-1.0\Scripts</TimberbornWorkshopScriptsPath>
-		<!-- Also copy to the game's Managed folder to ensure the running game loads the exact built DLL for debugging -->
-		<TimberbornManagedPath>D:\Program Files (x86)\Steam\steamapps\common\Timberborn\Timberborn_Data\Managed</TimberbornManagedPath>
 	</PropertyGroup>
 
 	<!-- Copy build outputs to Timberborn Scripts folder so the mod is available in-game. -->
@@ -32,8 +54,5 @@
 		<Copy SourceFiles="$(_OutputFile)" DestinationFolder="$(TimberbornWorkshopScriptsPath)" SkipUnchangedFiles="true" />
 		<!-- Copy PDB only for Debug builds so you can attach debugger and get symbols -->
 		<Copy SourceFiles="$(_OutputPdb)" DestinationFolder="$(TimberbornWorkshopScriptsPath)" SkipUnchangedFiles="true" Condition="'$(Configuration)'=='Debug' and Exists('$(_OutputPdb)')" />
-		<!-- Also copy DLL (and PDB for Debug) to the game's Managed folder so Visual Studio can find the module when attaching -->
-		<Copy SourceFiles="$(_OutputFile)" DestinationFolder="$(TimberbornManagedPath)" SkipUnchangedFiles="true" Condition="Exists('$(TimberbornManagedPath)')" />
-		<Copy SourceFiles="$(_OutputPdb)" DestinationFolder="$(TimberbornManagedPath)" SkipUnchangedFiles="true" Condition="'$(Configuration)'=='Debug' and Exists('$(_OutputPdb)') and Exists('$(TimberbornManagedPath)')" />
 	</Target>
 </Project>

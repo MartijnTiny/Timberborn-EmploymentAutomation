@@ -32,6 +32,7 @@ public class PowerComponent : BaseEmploymentComponent, IDuplicable<PowerComponen
 
     public override float High { get; set; } = 0.75f;
     public override float Low { get; set; } = 0.25f;
+    protected override bool ShouldPause => Fillrate < Low;
 
     private Manufactory manufactory;
     private MechanicalNode mechanicalNode;
@@ -87,6 +88,7 @@ public class PowerComponent : BaseEmploymentComponent, IDuplicable<PowerComponen
         else
             Fillrate = networkCapacity.x / networkCapacity.y;
         EmploymentBounds = GetEmploymentBoundsPower(Fillrate);
+        ApplyPauseLogic();
     }
 
     private Vector2Int GetEmploymentBoundsPower(float powerMeter)

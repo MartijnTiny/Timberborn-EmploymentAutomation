@@ -1,4 +1,5 @@
 using System;
+using Timberborn.Buildings;
 using Timberborn.Persistence;
 using Timberborn.TickSystem;
 using Timberborn.WorkSystem;
@@ -71,6 +72,32 @@ public abstract class BaseEmploymentComponent : TickableComponent, IPersistentEn
         return (effectiveMin, effectiveMax);
     }
 
+    protected virtual bool ShouldPause => false;
+
+    protected void ApplyPauseLogic()
+    {
+        if (!Available || !Active) return;
+
+        var pausableBuilding = GetComponent<PausableBuilding>();
+        if (pausableBuilding == null) return;
+
+        var workplaceComp = GetComponent<Workplace>();
+        if (workplaceComp != null && workplaceComp.MaxWorkers > 0) return;
+
+        Debug.Log($"[EmploymentAutomation] PauseCheck: {GameObject.name} Fillrate={Fillrate:F2} Low={Low:F2} High={High:F2} ShouldPause={ShouldPause} Paused={pausableBuilding.Paused}");
+
+        if (ShouldPause && !pausableBuilding.Paused)
+        {
+            Debug.Log($"[EmploymentAutomation] -> Pausing {GameObject.name}");
+            pausableBuilding.Pause();
+        }
+        else if (!ShouldPause && pausableBuilding.Paused)
+        {
+            Debug.Log($"[EmploymentAutomation] -> Resuming {GameObject.name}");
+            pausableBuilding.Resume();
+        }
+    }
+
     protected void CopySettingsFrom(BaseEmploymentComponent source)
     {
         if (source == null) return;
@@ -86,13 +113,13 @@ public abstract class BaseEmploymentComponent : TickableComponent, IPersistentEn
     {
         var (effectiveMin, effectiveMax) = GetEffectiveWorkerLimits(minLimit, maxLimit);
         
-        // Clamp the bounds to the effective limits
-        bounds.x = Mathf.Max(bounds.x, effectiveMin);
-        bounds.y = Mathf.Min(bounds.y, effectiveMax);
+        // Clamp both bounds to the effective range
+        bounds.x = Mathf.Clamp(bounds.x, effectiveMin, effectiveMax);
+        bounds.y = Mathf.Clamp(bounds.y, effectiveMin, effectiveMax);
         
         // Ensure min <= max
         if (bounds.x > bounds.y)
-            bounds.y = bounds.x;
+            bounds.x = bounds.y;
         
         return bounds;
     }
